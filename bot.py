@@ -13,29 +13,24 @@ Telegram Reminder Bot
 
 Автор: David
 """
-
-
 import asyncio
 import json
 import re
 import uuid
 import os
 from datetime import datetime, timedelta
-
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.exceptions import TelegramForbiddenError
-
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.base import JobLookupError
-
 from dotenv import load_dotenv
 load_dotenv()
-# ------------------ НАСТРОЙКИ ------------------
-load_dotenv()  # Загружаем переменные окружения из .env
+
+#НАСТРОЙКИ
 API_TOKEN = os.getenv("BOT_TOKEN")
 
 REMINDERS_FILE = "reminders.json"
@@ -47,13 +42,13 @@ scheduler = AsyncIOScheduler()
 reminders = []  # локальное хранилище
 
 
-# ------------------ FSM ------------------
+#FSM
 class ReminderForm(StatesGroup):
     waiting_for_time = State()
     waiting_for_text = State()
 
 
-# ------------------ Хранилище ------------------
+#Хранилище
 def load_reminders():
     global reminders
     try:
@@ -87,7 +82,7 @@ async def safe_send_message(chat_id, text, **kwargs):
         print(f"❌ Пользователь {chat_id} заблокировал бота. Напоминания удалены.")
 
 
-# ------------------ Кнопки ------------------
+#Кнопки
 def main_menu():
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -120,7 +115,7 @@ def reminders_menu(user_reminders):
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
-# ------------------ Парсинг времени ------------------
+#Парсинг времени
 def normalize_time(raw: str) -> str:
     if not raw:
         raise ValueError("empty")
@@ -149,7 +144,7 @@ def normalize_time(raw: str) -> str:
     raise ValueError("pattern")
 
 
-# ------------------ Хэндлеры ------------------
+#Приветствие
 @dp.message(Command("start"))
 async def start(message: types.Message):
     await message.answer(
@@ -234,7 +229,7 @@ async def back_main(callback: CallbackQuery):
     await callback.message.edit_text("⬅️ Главное меню", reply_markup=main_menu())
 
 
-# ------------------ Напоминания ------------------
+#Напоминания
 async def send_reminder(chat_id: int, text: str, job_id: str):
     await safe_send_message(
         chat_id,
@@ -294,7 +289,7 @@ async def process_delay_callback(callback: CallbackQuery):
     await callback.answer()
 
 
-# ------------------ MAIN ------------------
+#MAIN
 async def main():
     load_reminders()
     scheduler.start()
